@@ -54,6 +54,12 @@ namespace AzureUpload.Runner
 
             try
             {
+                if (!File.Exists(appFolder + "/appsettings.json"))
+                {
+                    Console.WriteLine("Configuration file was not found in " + appFolder + "/appsettings.json");
+                    Console.WriteLine("aborting");
+					throw new Exception("Missing configuration file");
+                }
                 // Init configuration
                 var builder = new ConfigurationBuilder()
                     .SetBasePath(appFolder)
@@ -63,7 +69,7 @@ namespace AzureUpload.Runner
             }
             catch(Exception ex)
             {
-                Console.WriteLine("Invalid configuration file");
+                Console.WriteLine("Invalid configuration file exception" + ex.ToString());
                 throw ex;
             }
 
