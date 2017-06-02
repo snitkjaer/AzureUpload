@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureUpload.ConsoleApp", "AzureUploadConsole\AzureUpload.ConsoleApp.csproj", "{462D990D-221F-4FA4-8FD1-689A984AD695}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureUpload.WindowsService", "AzureUploadWindowsService\AzureUpload.WindowsService.csproj", "{38288D91-2FA3-46AF-96A2-33ACA8353689}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureUpload.Runner", "AzureUploadLib\AzureUpload.Runner.csproj", "{4F059136-FC86-4C83-9D12-1B8FDC3F0DD1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{462D990D-221F-4FA4-8FD1-689A984AD695}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{462D990D-221F-4FA4-8FD1-689A984AD695}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{462D990D-221F-4FA4-8FD1-689A984AD695}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{462D990D-221F-4FA4-8FD1-689A984AD695}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38288D91-2FA3-46AF-96A2-33ACA8353689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38288D91-2FA3-46AF-96A2-33ACA8353689}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38288D91-2FA3-46AF-96A2-33ACA8353689}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38288D91-2FA3-46AF-96A2-33ACA8353689}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F059136-FC86-4C83-9D12-1B8FDC3F0DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F059136-FC86-4C83-9D12-1B8FDC3F0DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F059136-FC86-4C83-9D12-1B8FDC3F0DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F059136-FC86-4C83-9D12-1B8FDC3F0DD1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
