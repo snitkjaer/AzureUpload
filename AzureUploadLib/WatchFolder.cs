@@ -25,7 +25,7 @@ namespace AzureUpload.Runner
 
         private TimeSpan CheckForNewFilesDelay = new TimeSpan(0, 0, 30);
 
-        bool running = true;
+        bool KeepRunning = true;
         private Task taskWatchFolder;
 
         CancellationTokenSource cts;
@@ -40,7 +40,7 @@ namespace AzureUpload.Runner
 
         ~WatchFolder()
         {
-            running = false;
+            KeepRunning = false;
             cts.Cancel();
             LoggerFactory.Dispose();
         }
@@ -102,6 +102,7 @@ namespace AzureUpload.Runner
 
 			// Config
 			WatchFolderPath = Configuration.GetSection("AppSettings")["WatchFolderPath"];
+            KeepRunning = Configuration.GetSection("AppSettings")["KeepRunning"].Get<bool>();
             FileExtensionFilter = Configuration.GetSection("AppSettings")["FileExtensionFilter"];
 			ValidateZipFile = Configuration.GetSection("AppSettings")["ValidateZip"].Get<bool>();
 			DeleteInvalidZipFiles = Configuration.GetSection("AppSettings")["DeleteInvalidZipFiles"].Get<bool>();
@@ -119,31 +120,33 @@ namespace AzureUpload.Runner
 
 		public async Task MonitorWatchFolderAsync(CancellationToken token)
 		{
-			while (running)
-			{
-				try
-				{
-					await UploadAndRemoveFilesInFolder();
+            do
+            {
+                try
+                {
+                    await UploadAndRemoveFilesInFolder();
 
-				}
-				catch (Exception e)
-				{
-                    Logger.LogError("Exception",e);
-				}
-				await Task.Delay(CheckForNewFilesDelay, token);
-			}
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError("Exception", e);
+                }
+                if (KeepRunning)
+                    await Task.Delay(CheckForNewFilesDelay, token);
+            } 
+              while (KeepRunning);
 		}
 
 
 		public void Stop()
 		{
-            running = false;
+            KeepRunning = false;
             cts.Cancel();
 			try
 			{
 				taskWatchFolder.Wait();
 			}
-			catch (Exception e)
+			catch
 			{
 				//Logger.LogError("Exception stopping folder monitor", e);
 			}
