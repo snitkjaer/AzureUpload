@@ -9,49 +9,15 @@ namespace AzureUpload.ConsoleApp
 
 		static void Main(string[] args)
         {
+            ConsoleApp c = new ConsoleApp();
+            c.run();
 
-			
-            ManualResetEvent stopEvent = new ManualResetEvent(false);
-
-			Console.Clear();
-
-
-
-
-            bool running = true;
-
-            try
-            {
-                WatchFolder watchFolder = new WatchFolder();
-
-                System.Console.CancelKeyPress += (s, e) =>
-                {
-                    Console.WriteLine("Stopping");
-                    e.Cancel = true;
-                    watchFolder.Stop();
-                    running = false;
-                    stopEvent.Set();
-                };
-
-                watchFolder.Start();
-
-                while (running)
-                {
-
-                    Console.WriteLine("Press CTRL+C to stop:");
-
-                    stopEvent.WaitOne();
-
-                    Console.WriteLine("Stopped");
-
-
-                }
-            }
-            catch{}
 
 
         }
 
-
     }
+
+
+
 }

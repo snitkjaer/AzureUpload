@@ -46,7 +46,27 @@ namespace AzureUpload.Runner
         }
 
 
-		public void Start()
+
+        #region DoneWatching Event
+        // Delegate
+        public delegate void DoneWatchingEventHandler(object sender);
+
+        // The event
+        public event DoneWatchingEventHandler DoneWatching;
+
+        // The method which fires the Event
+        protected void OnDoneWatching(object sender)
+        {
+            // Check if there are any Subscribers
+            if (DoneWatching != null)
+            {
+                // Call the Event
+                DoneWatching(this);
+            }
+        }
+        #endregion
+
+        public void Start()
 		{
             Sender = System.Net.Dns.GetHostName();
 
@@ -109,7 +129,10 @@ namespace AzureUpload.Runner
 			DeleteFileOnSuccesfullUpload = Configuration.GetSection("AppSettings")["DeleteFileOnSuccesfullUpload"].Get<bool>();
 			FileLastWriteTimeToUploadDelayDuration = XmlConvert.ToTimeSpan(Configuration.GetSection("AppSettings")["FileLastWriteTimeToUploadDelayDuration"]);
 
-            Logger.LogInformation("Watching folder: " + WatchFolderPath);
+            if(KeepRunning)
+                Logger.LogInformation("Watching folder: " + WatchFolderPath);
+            else
+                Logger.LogInformation("Uploading files in folder: " + WatchFolderPath);
 
             // run
             taskWatchFolder = Task.Run(() => MonitorWatchFolderAsync(cts.Token));
@@ -133,8 +156,10 @@ namespace AzureUpload.Runner
                 }
                 if (KeepRunning)
                     await Task.Delay(CheckForNewFilesDelay, token);
+                else
+                    OnDoneWatching(this);
             } 
-              while (KeepRunning);
+            while (KeepRunning);
 		}
 
 
