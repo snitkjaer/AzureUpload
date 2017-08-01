@@ -4,15 +4,15 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <Version>1.1.0</Version>
+    <ReleaseVersion>0.2</ReleaseVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
   <ItemGroup>
     <Compile Remove="UploadFileToAzureBlob.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Properties\PublishProfiles\FolderProfile.pubxml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AzureUploadLib\AzureUpload.Runner.csproj" />
   </ItemGroup>
 </Project>

@@ -10,27 +10,25 @@ namespace AzureUpload.Runner
     {
 		private static EventHubClient eventHubClient;
 
-		private readonly ILogger Logger;
-		private ILoggerFactory LoggerFactory;
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		public AzureEventHubSend(ILoggerFactory loggerFactory, string EhConnectionString,string EhEntityPath)
+
+        public AzureEventHubSend( string EhConnectionString)
 		{
-			LoggerFactory = loggerFactory;
-			Logger = loggerFactory
-				.CreateLogger(typeof(AzureBlobUpload).FullName);
-
 			
 			try
 			{
-				var connectionStringBuilder = new EventHubsConnectionStringBuilder(EhConnectionString)
+				/*
+                 * var connectionStringBuilder = new EventHubsConnectionStringBuilder(EhConnectionString)
 				{
 					EntityPath = EhEntityPath
 				};
-				eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+                */
+				eventHubClient = EventHubClient.CreateFromConnectionString(EhConnectionString);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError("Exception connecting to event hub", ex);
+				log.Error("Exception connecting to event hub", ex);
                 throw ex;
 			}
 		}
@@ -57,7 +55,7 @@ namespace AzureUpload.Runner
             }
             catch(Exception ex)
             {
-                Logger.LogError("Exception sending message" + message + ex.ToString());
+                log.Error("Exception sending message" + message + ex.ToString());
                 return false;
             }
 

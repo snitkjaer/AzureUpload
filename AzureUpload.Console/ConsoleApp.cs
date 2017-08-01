@@ -6,30 +6,38 @@ using System.Reflection;
 using AzureUpload.Runner;
 using System.Threading;
 
-namespace AzureUpload.ConsoleApp
+namespace AzureUpload.Console
 {
     class ConsoleApp
     {
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         ManualResetEvent stopEvent = new ManualResetEvent(false);
         WatchFolder watchFolder;
         bool running = true;
 
         public void Run()
         {
-            Console.Clear();
+            System.Console.Clear();
 
-            string version = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            //string version = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
 
             try
             {
-                Console.WriteLine("Starting version "+ version);
+                string assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+                
+
+                //System.Console.WriteLine("Starting version "+ version);
                 watchFolder = new WatchFolder();
                 watchFolder.DoneWatching += WatchFolder_DoneWatching;
 
+                Log.Info("Starting version " + assemblyVersion);
+
                 System.Console.CancelKeyPress += (s, e) =>
                 {
-                    Console.WriteLine("Stopping");
+                    Log.Info("Cancel pressed - stopping");
                     e.Cancel = true;
                     watchFolder.Stop();
                     running = false;
@@ -41,16 +49,19 @@ namespace AzureUpload.ConsoleApp
                 while (running)
                 {
 
-                    Console.WriteLine("Press CTRL+C to stop:");
+                    System.Console.WriteLine("Press CTRL+C to stop:");
 
                     stopEvent.WaitOne();
 
-                    Console.WriteLine("Stopped");
+                    Log.Info("Stopped");
 
 
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Error("Exception", ex);
+            }
         }
 
         private void WatchFolder_DoneWatching(object sender)

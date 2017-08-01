@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,24 +7,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 
+using log4net;
+
 namespace AzureUpload.Runner
 {
     public class WatchFolder
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		// Configuration
-		public static IConfigurationRoot Configuration { get; set; }
-
+        // Configuration
+        public static IConfigurationRoot Configuration { get; set; }
         public string WatchFolderPath = ".";
         public string FileExtensionFilter = "*.*";
 
 
-		private ILogger Logger;
-		private ILoggerFactory LoggerFactory;
-
         private TimeSpan CheckForNewFilesDelay = new TimeSpan(0, 0, 30);
 
-        bool KeepRunning = true;
+        public bool KeepRunning = true;
         private Task taskWatchFolder;
 
         CancellationTokenSource cts;
@@ -41,8 +39,10 @@ namespace AzureUpload.Runner
         ~WatchFolder()
         {
             KeepRunning = false;
-            cts.Cancel();
-            LoggerFactory.Dispose();
+            if(cts != null)
+                cts.Cancel();
+            if (log != null)
+                LogManager.Shutdown();
         }
 
 
@@ -58,11 +58,8 @@ namespace AzureUpload.Runner
         protected void OnDoneWatching(object sender)
         {
             // Check if there are any Subscribers
-            if (DoneWatching != null)
-            {
-                // Call the Event
-                DoneWatching(this);
-            }
+            // Call the Event
+            DoneWatching?.Invoke(this);
         }
         #endregion
 
@@ -70,7 +67,7 @@ namespace AzureUpload.Runner
 		{
             Sender = System.Net.Dns.GetHostName();
 
-			string appFolder = Directory.GetCurrentDirectory();
+            string appFolder = AppDomain.CurrentDomain.BaseDirectory;
 
             try
             {
@@ -94,31 +91,21 @@ namespace AzureUpload.Runner
             }
 
 
-			// Logging
-			var loggingConfig = Configuration.GetSection("Logging");
-
-			//Directory.CreateDirectory(appFolder + "/Logs");
-
-			LoggerFactory = new LoggerFactory()
-				.AddConsole()
-				.AddFile(Configuration.GetSection("Logging"));
-            
-			Logger = LoggerFactory
-			   .CreateLogger(typeof(WatchFolder));
+            // Logging
+			Directory.CreateDirectory(appFolder + "/Logs");
 
 
 
             // Blob upload
             cts = new CancellationTokenSource();
-            BlobUpload = new AzureBlobUpload(LoggerFactory);
+            BlobUpload = new AzureBlobUpload();
             BlobUpload.cancellationToken = cts.Token;
 			BlobUpload.stringBlobUri = Configuration.GetConnectionString("BlobContainerUri");
+            
 
             // Event hub
-            SendEvent = new AzureEventHubSend(LoggerFactory,
-                                              Configuration.GetConnectionString("EventHubUri"),
-                                              Configuration.GetSection("AppSettings")["EventHubEntityPath"]
-                                              );
+            SendEvent = new AzureEventHubSend(Configuration.GetConnectionString("EventHubUri"));
+                                              
 
 			// Config
 			WatchFolderPath = Configuration.GetSection("AppSettings")["WatchFolderPath"];
@@ -130,9 +117,9 @@ namespace AzureUpload.Runner
 			FileLastWriteTimeToUploadDelayDuration = XmlConvert.ToTimeSpan(Configuration.GetSection("AppSettings")["FileLastWriteTimeToUploadDelayDuration"]);
 
             if(KeepRunning)
-                Logger.LogInformation("Watching folder: " + WatchFolderPath);
+                log.Info("Watching folder: " + WatchFolderPath);
             else
-                Logger.LogInformation("Uploading files in folder: " + WatchFolderPath);
+                log.Info("Uploading files in folder: " + WatchFolderPath);
 
             // run
             taskWatchFolder = Task.Run(() => MonitorWatchFolderAsync(cts.Token));
@@ -152,7 +139,7 @@ namespace AzureUpload.Runner
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError("Exception", e);
+                    log.Error("Exception", e);
                 }
                 if (KeepRunning)
                     await Task.Delay(CheckForNewFilesDelay, token);
@@ -191,11 +178,22 @@ namespace AzureUpload.Runner
 
 				List<string> uploadFileList = new List<string>();
 
-				// Get files that match the extension filter
-				IEnumerable<string> filePaths = Directory.GetFiles(WatchFolderPath, "*.*", SearchOption.TopDirectoryOnly)
+                if (!Directory.Exists(WatchFolderPath))
+                {
+                    log.Error("Watch folder does not exist :" + WatchFolderPath);
+                    return;
+                }
+                
+
+                // Get files that match the extension filter
+                IEnumerable<string> filePaths = Directory.GetFiles(WatchFolderPath, "*.*", SearchOption.TopDirectoryOnly)
 										 .Where(s => FileExtensionFilter.Contains(Path.GetExtension(s)));
 
 
+                if(filePaths.Count() < 1)
+                {
+                    log.Debug("No files found");
+                }
 
 
 				foreach (var filePath in filePaths)
@@ -232,7 +230,7 @@ namespace AzureUpload.Runner
 			catch (Exception ex)
 			{
 
-				Logger.LogError("Exception ", ex);
+                log.Error("Exception ", ex);
 			}
 		}
 
@@ -261,7 +259,7 @@ namespace AzureUpload.Runner
 			catch (Exception ex)
 			{
 
-				Logger.LogError("Exception ", ex);
+                log.Error("Exception ", ex);
 
 			}
 		}
@@ -272,12 +270,23 @@ namespace AzureUpload.Runner
 			try
 			{
 				File.Delete(filePath);
-				Logger.LogInformation("Deleted " + filePath);
+                log.Info("Deleted " + filePath);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError("DeleteFile", ex);
+                log.Error("DeleteFile", ex);
 			}
 		}
+
+        public static string AssemblyDirectory
+        {
+            get
+            {
+                string codeBase = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
+            }
+        }
     }
 }

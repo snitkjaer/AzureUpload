@@ -13,15 +13,8 @@ namespace AzureUpload.Runner
     
     public class AzureBlobUpload
     {
-        private readonly ILogger Logger;
-        private ILoggerFactory LoggerFactory;
 
-		public AzureBlobUpload(ILoggerFactory loggerFactory)
-		{
-            LoggerFactory = loggerFactory;
-			Logger = loggerFactory
-				.CreateLogger(typeof(AzureBlobUpload).FullName);
-		}
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public CancellationToken cancellationToken;
 
@@ -45,14 +38,14 @@ namespace AzureUpload.Runner
 				// Upload the file
 				await blobClient.UploadFromFileAsync(filePath);
 
-				Logger.LogInformation("Uploaded: " + filePath);
+				log.Info("Uploaded: " + filePath);
 				return true;
 
 			}
 			catch (Exception ex)
 			{
 
-				Logger.LogError("Exception uploading file " + filePath, ex);
+				log.Error("Exception uploading file " + filePath, ex);
 				return false;
 			}
 		}
